@@ -24,6 +24,8 @@
 
 The app features a premium dark-themed interface built using "Glassmorphism" material styling, layout scaling, and responsive hover feedback.
 
+![CleanMac Dashboard Preview](CleanMac/Resources/screenshot.png)
+
 *Includes:*
 * Interactive category cards on the Home Dashboard.
 * Safe category checkmarks and individual file verification selectors.
