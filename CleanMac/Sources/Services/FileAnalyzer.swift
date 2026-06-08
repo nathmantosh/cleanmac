@@ -291,7 +291,7 @@ class FileAnalyzer: ObservableObject {
         
         for file in largeFiles where file.isSelected {
             do {
-                try fileManager.removeItem(atPath: file.path)
+                try fileManager.trashItem(at: URL(fileURLWithPath: file.path), resultingItemURL: nil)
                 deletedSize += file.size
             } catch {
                 print("Failed to delete: \(file.path)")
@@ -312,7 +312,7 @@ class FileAnalyzer: ObservableObject {
         for group in duplicateGroups {
             for file in group.files where file.isSelected && !file.isOriginal {
                 do {
-                    try fileManager.removeItem(atPath: file.path)
+                    try fileManager.trashItem(at: URL(fileURLWithPath: file.path), resultingItemURL: nil)
                     deletedSize += group.size
                 } catch {
                     print("Failed to delete: \(file.path)")

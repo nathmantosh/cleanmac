@@ -22,3 +22,6 @@ packages/
 # Built binaries & release files
 CleanMac/CleanMac
 *.zip
+
+# Local recordings and scratch media
+clean my mac recording/

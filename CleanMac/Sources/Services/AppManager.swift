@@ -240,49 +240,32 @@ class AppManager: ObservableObject {
     @MainActor
     func uninstall(app: InstalledApp, includeLeftovers: Bool = true) async throws -> Int64 {
         var removedSize: Int64 = 0
-        var pathsToDelete: [String] = []
+        var pathsToTrash: [String] = []
         
         // Add main app bundle
-        pathsToDelete.append(app.path)
+        pathsToTrash.append(app.path)
         removedSize += app.size
         
         // Add leftovers if requested
         if includeLeftovers {
             let appLeftovers = await findLeftovers(for: app)
             for leftover in appLeftovers where leftover.isSelected {
-                pathsToDelete.append(leftover.path)
+                pathsToTrash.append(leftover.path)
                 removedSize += leftover.size
             }
         }
-        
-        // Create temp file with paths to delete
-        let tempFile = FileManager.default.temporaryDirectory.appendingPathComponent("cleanmac_uninstall_\(UUID().uuidString).txt")
-        
-        let content = pathsToDelete.joined(separator: "\n")
-        try content.write(to: tempFile, atomically: true, encoding: .utf8)
-        
-        // Use osascript for admin privileges
-        let appleScript = """
-        do shell script "while IFS= read -r file; do rm -rf \\"$file\\"; done < '\(tempFile.path)'; rm '\(tempFile.path)'" with administrator privileges
-        """
-        
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
-        process.arguments = ["-e", appleScript]
-        
-        let pipe = Pipe()
-        process.standardOutput = pipe
-        process.standardError = pipe
-        
-        try process.run()
-        process.waitUntilExit()
-        
-        if process.terminationStatus != 0 {
-            let errorData = pipe.fileHandleForReading.readDataToEndOfFile()
-            let errorMessage = String(data: errorData, encoding: .utf8) ?? "Unknown error"
-            print("Uninstall failed: \(errorMessage)")
-            try? FileManager.default.removeItem(at: tempFile)
-            throw NSError(domain: "AppManager", code: 1, userInfo: [NSLocalizedDescriptionKey: errorMessage])
+
+        for path in pathsToTrash {
+            do {
+                try FileManager.default.trashItem(at: URL(fileURLWithPath: path), resultingItemURL: nil)
+            } catch {
+                print("Failed to move to Trash: \(path) - \(error)")
+                throw NSError(
+                    domain: "AppManager",
+                    code: 1,
+                    userInfo: [NSLocalizedDescriptionKey: "Could not move \(path) to Trash. CleanMac does not force-delete files with administrator privileges."]
+                )
+            }
         }
         
         print("Successfully uninstalled: \(app.name)")
@@ -426,30 +409,14 @@ class AppManager: ObservableObject {
             totalSize += leftover.size
         }
         
-        // Write to temp file
-        let tempFile = FileManager.default.temporaryDirectory.appendingPathComponent("cleanmac_leftovers_\(UUID().uuidString).txt")
-        
         do {
-            let content = selectedPaths.joined(separator: "\n")
-            try content.write(to: tempFile, atomically: true, encoding: .utf8)
-            
-            let appleScript = """
-            do shell script "while IFS= read -r file; do rm -rf \\"$file\\"; done < '\(tempFile.path)'; rm '\(tempFile.path)'" with administrator privileges
-            """
-            
-            let process = Process()
-            process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
-            process.arguments = ["-e", appleScript]
-            
-            try process.run()
-            process.waitUntilExit()
-            
-            if process.terminationStatus == 0 {
-                orphanedLeftovers.removeAll()
-                return totalSize
+            for path in selectedPaths {
+                try FileManager.default.trashItem(at: URL(fileURLWithPath: path), resultingItemURL: nil)
             }
+            orphanedLeftovers.removeAll()
+            return totalSize
         } catch {
-            print("Clean orphaned leftovers error: \(error)")
+            print("Move orphaned leftovers to Trash error: \(error)")
         }
         
         return 0

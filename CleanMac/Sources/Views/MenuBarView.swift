@@ -143,7 +143,7 @@ struct MenuBarView: View {
             do {
                 let contents = try FileManager.default.contentsOfDirectory(at: trashURL, includingPropertiesForKeys: nil)
                 for item in contents {
-                    try FileManager.default.removeItem(at: item)
+                    try FileManager.default.trashItem(at: item, resultingItemURL: nil)
                 }
                 DispatchQueue.main.async {
                     appState.updateSystemInfo()

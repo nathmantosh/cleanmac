@@ -53,7 +53,7 @@ To run or build CleanMac locally:
    ```
 
 ### Option B: Using Xcode
-1. Open the [CleanMac.xcodeproj](file:///Users/mantoshdebnath/Desktop/clean%20my%20mac%20alternative/CleanMac/CleanMac.xcodeproj) in Xcode.
+1. Open `CleanMac/CleanMac.xcodeproj` in Xcode.
 2. Select the `CleanMac` scheme.
 3. Build and run (`Cmd + R`).
 
@@ -61,16 +61,16 @@ To run or build CleanMac locally:
 
 ## 🤝 Contributing
 
-We welcome contributions of all kinds! Please review our [CONTRIBUTING.md](file:///Users/mantoshdebnath/Desktop/clean%20my%20mac%20alternative/CONTRIBUTING.md) to get started on setting up your environment and submitting changes.
+We welcome contributions of all kinds! Please review our [CONTRIBUTING.md](CONTRIBUTING.md) to get started on setting up your environment and submitting changes.
 
 ---
 
 ## 🔒 Security & Privacy
 
-CleanMac runs 100% locally and collects **zero analytics, tracking, or telemetry**. All scan data remains on your machine. For security reporting, please check our [SECURITY.md](file:///Users/mantoshdebnath/Desktop/clean%20my%20mac%20alternative/SECURITY.md).
+CleanMac runs 100% locally and collects **zero analytics, tracking, or telemetry**. All scan data remains on your machine. For security reporting, please check our [SECURITY.md](SECURITY.md).
 
 ---
 
 ## 📜 License
 
-CleanMac is distributed under the **MIT License**. See [LICENSE](file:///Users/mantoshdebnath/Desktop/clean%20my%20mac%20alternative/LICENSE) for details.
+CleanMac is distributed under the **MIT License**. See [LICENSE](LICENSE) for details.

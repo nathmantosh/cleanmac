@@ -74,7 +74,6 @@ struct CleaningSettingsView: View {
     @AppStorage("cleanDeveloperJunk") private var cleanDeveloperJunk = true
     @AppStorage("cleanDownloads") private var cleanDownloads = false
     @AppStorage("cleanTrash") private var cleanTrash = false
-    @AppStorage("safeDelete") private var safeDelete = false
     
     var body: some View {
         Form {
@@ -88,8 +87,7 @@ struct CleaningSettingsView: View {
             }
             
             Section("Cleanup Method") {
-                Toggle("Safe Deletion (Move to Trash)", isOn: $safeDelete)
-                Text("When enabled, files deleted during cleanup will be moved to the system Trash instead of being permanently removed.")
+                Text("CleanMac moves selected files to the system Trash whenever possible. Files already inside Trash may be emptied if the Trash category is selected.")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }

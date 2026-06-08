@@ -253,12 +253,10 @@ class JunkScanner: ObservableObject {
         var cleanedSize: Int64 = 0
         var failedFiles: [(path: String, size: Int64)] = []
         let fileManager = FileManager.default
-        let safeDelete = UserDefaults.standard.bool(forKey: "safeDelete")
-        
         for result in scanResults where result.isSelected {
             for file in result.files where file.isSelected {
                 do {
-                    if safeDelete && result.category != .trash {
+                    if result.category != .trash {
                         let fileURL = URL(fileURLWithPath: file.path)
                         try fileManager.trashItem(at: fileURL, resultingItemURL: nil)
                     } else {
@@ -273,10 +271,9 @@ class JunkScanner: ObservableObject {
             }
         }
         
-        // If we have failed files (likely system files), try with admin privileges
+        // Failed files are left untouched. CleanMac avoids privileged force-delete fallback for safety.
         if !failedFiles.isEmpty {
-            let adminCleaned = await cleanWithAdminPrivileges(files: failedFiles)
-            cleanedSize += adminCleaned
+            print("Skipped \(failedFiles.count) files that could not be moved to Trash.")
         }
         
         // Clear results after cleaning
@@ -285,61 +282,6 @@ class JunkScanner: ObservableObject {
         }
         
         return cleanedSize
-    }
-    
-    // MARK: - Admin Privilege Cleaning
-    @MainActor
-    private func cleanWithAdminPrivileges(files: [(path: String, size: Int64)]) async -> Int64 {
-        guard !files.isEmpty else { return 0 }
-
-        let filePaths = files.map(\.path)
-        let expectedCleanedSize = files.reduce(0) { $0 + $1.size }
-        
-        // Write file paths to a temp file to avoid command line limits
-        let tempFile = FileManager.default.temporaryDirectory.appendingPathComponent("cleanmac_delete_\(UUID().uuidString).txt")
-        
-        do {
-            let content = filePaths.joined(separator: "\n")
-            try content.write(to: tempFile, atomically: true, encoding: .utf8)
-        } catch {
-            print("Failed to write temp file: \(error)")
-            return 0
-        }
-        
-        // Single AppleScript command to delete all files from the list
-        let appleScript = """
-        do shell script "while IFS= read -r file; do rm -rf \\"$file\\"; done < '\(tempFile.path)'; rm '\(tempFile.path)'" with administrator privileges
-        """
-        
-        // Run via osascript - single password prompt
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
-        process.arguments = ["-e", appleScript]
-        
-        let pipe = Pipe()
-        process.standardOutput = pipe
-        process.standardError = pipe
-        
-        do {
-            try process.run()
-            process.waitUntilExit()
-            
-            if process.terminationStatus == 0 {
-                print("Admin cleaned \(files.count) files successfully")
-                return expectedCleanedSize
-            } else {
-                let errorData = pipe.fileHandleForReading.readDataToEndOfFile()
-                let errorMessage = String(data: errorData, encoding: .utf8) ?? ""
-                print("Admin clean failed: \(errorMessage)")
-                // Clean up temp file on failure
-                try? FileManager.default.removeItem(at: tempFile)
-            }
-        } catch {
-            print("Admin clean error: \(error)")
-            try? FileManager.default.removeItem(at: tempFile)
-        }
-        
-        return 0
     }
     
     func toggleCategorySelection(_ category: JunkCategory) {

@@ -862,7 +862,7 @@ struct SmartScanView: View {
                         }
                     }
                 } message: {
-                    Text("This will permanently delete \(scanner.formatBytes(scanner.selectedSize)) of junk files. This cannot be undone.")
+                    Text("This will move \(scanner.formatBytes(scanner.selectedSize)) of selected junk files to Trash where possible. Files already in Trash may be emptied.")
                 }
             } else {
                 // Smart Care Dashboard (CleanMyMac Style)
@@ -2137,7 +2137,7 @@ struct UninstallerView: View {
                 }
             }
         } message: {
-            Text("This will permanently remove the application and its associated files.")
+            Text("This will move the application and selected associated files to Trash where possible.")
         }
         .onAppear {
             if appManager.installedApps.isEmpty {
@@ -2385,7 +2385,7 @@ struct PrivacyView: View {
             func removeIfExists(_ path: String) -> Bool {
                 guard fileManager.fileExists(atPath: path) else { return false }
                 do {
-                    try fileManager.removeItem(atPath: path)
+                    try fileManager.trashItem(at: URL(fileURLWithPath: path), resultingItemURL: nil)
                     return true
                 } catch {
                     return false
@@ -2473,19 +2473,19 @@ struct MaintenanceView: View {
     
     let cacheTasks: [(name: String, command: String, icon: String, description: String)] = [
         ("Clear Font Cache", "atsutil databases -remove; atsutil server -shutdown; atsutil server -ping", "textformat", "Fixes font rendering issues"),
-        ("Clear Thumbnail Cache", "rm -rf ~/Library/Caches/com.apple.QuickLookDaemon/*", "photo", "Clears Quick Look previews"),
-        ("Clear Icon Cache", "rm -rf /Library/Caches/com.apple.iconservices.store 2>/dev/null; killall Finder", "app.badge", "Resets app icon cache"),
+        ("Reset Quick Look Cache", "qlmanage -r cache", "photo", "Resets Quick Look preview cache"),
+        ("Restart Finder", "killall Finder", "app.badge", "Restarts Finder to refresh desktop and icons"),
     ]
     
     let indexTasks: [(name: String, command: String, icon: String, description: String)] = [
         ("Rebuild Spotlight Index", "mdutil -E /", "magnifyingglass", "Rebuilds search index (takes time)"),
         ("Rebuild Launch Services", "/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -kill -r -domain local -domain system -domain user", "square.grid.2x2", "Fixes 'Open With' menu"),
-        ("Rebuild Mail Index", "rm ~/Library/Mail/V*/MailData/Envelope\\ Index*", "envelope", "Fixes Mail search issues"),
+        ("Open Mail Data Folder", "open ~/Library/Mail", "envelope", "Opens Mail data so index files can be reviewed manually"),
     ]
     
     let cleanupTasks: [(name: String, command: String, icon: String, description: String)] = [
-        ("Empty Trash Securely", "rm -rf ~/.Trash/*", "trash", "Permanently empties Trash"),
-        ("Clear Recent Items", "rm -rf ~/Library/Application\\ Support/com.apple.sharedfilelist/*", "clock.arrow.circlepath", "Clears recent files list"),
+        ("Empty Trash", "osascript -e 'tell application \"Finder\" to empty trash'", "trash", "Empties Trash using Finder"),
+        ("Clear Recent Items", "osascript -e 'tell application \"System Events\" to delete every recent document'", "clock.arrow.circlepath", "Clears recent files list"),
         ("Run Maintenance Scripts", "periodic daily weekly monthly", "terminal", "Runs macOS maintenance scripts"),
     ]
     
