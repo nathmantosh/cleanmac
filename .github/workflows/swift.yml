@@ -1,0 +1,27 @@
+name: Build and Test CleanMac
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      
+    - name: Compile CleanMac App
+      run: |
+        cd CleanMac
+        swiftc -o CleanMac Sources/CleanMacApp.swift Sources/Services/AppManager.swift Sources/Services/FileAnalyzer.swift Sources/Services/JunkScanner.swift Sources/Views/ContentView.swift Sources/Views/MenuBarView.swift Sources/Views/SettingsView.swift
+        
+    - name: Run Tests
+      run: |
+        cd CleanMac
+        # Note: We need to use swift test to run our smoke tests
+        # We updated Package.swift to 5.9 so package manifest parsing is supported on newer swift versions in macOS runners
+        swift test

@@ -18,3 +18,7 @@ packages/
 # Local configuration files
 .env
 *.local
+
+# Built binaries & release files
+CleanMac/CleanMac
+*.zip
