@@ -71,8 +71,10 @@ struct CleaningSettingsView: View {
     @AppStorage("cleanSystemCache") private var cleanSystemCache = true
     @AppStorage("cleanUserCache") private var cleanUserCache = true
     @AppStorage("cleanLogs") private var cleanLogs = true
+    @AppStorage("cleanDeveloperJunk") private var cleanDeveloperJunk = true
     @AppStorage("cleanDownloads") private var cleanDownloads = false
     @AppStorage("cleanTrash") private var cleanTrash = false
+    @AppStorage("safeDelete") private var safeDelete = false
     
     var body: some View {
         Form {
@@ -80,8 +82,16 @@ struct CleaningSettingsView: View {
                 Toggle("System Cache", isOn: $cleanSystemCache)
                 Toggle("User Cache", isOn: $cleanUserCache)
                 Toggle("System & App Logs", isOn: $cleanLogs)
+                Toggle("Developer Junk", isOn: $cleanDeveloperJunk)
                 Toggle("Downloads folder", isOn: $cleanDownloads)
                 Toggle("Trash", isOn: $cleanTrash)
+            }
+            
+            Section("Cleanup Method") {
+                Toggle("Safe Deletion (Move to Trash)", isOn: $safeDelete)
+                Text("When enabled, files deleted during cleanup will be moved to the system Trash instead of being permanently removed.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
         }
         .formStyle(.grouped)

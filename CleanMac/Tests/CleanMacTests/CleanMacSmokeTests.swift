@@ -78,12 +78,13 @@ final class CleanMacSmokeTests: XCTestCase {
             cleanSystemCache: false,
             cleanUserCache: true,
             cleanLogs: false,
+            cleanDeveloperJunk: true,
             cleanDownloads: true,
             cleanTrash: false
         )
 
         XCTAssertTrue(categories.contains(.browserCache))
-        XCTAssertTrue(categories.contains(.xcodeJunk))
+        XCTAssertTrue(categories.contains(.developerJunk))
         XCTAssertTrue(categories.contains(.userCache))
         XCTAssertTrue(categories.contains(.downloads))
 

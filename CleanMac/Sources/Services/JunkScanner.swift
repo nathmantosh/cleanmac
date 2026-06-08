@@ -11,7 +11,7 @@ class JunkScanner: ObservableObject {
         case systemLogs = "System Logs"
         case downloads = "Downloads"
         case trash = "Trash"
-        case xcodeJunk = "Xcode Junk"
+        case developerJunk = "Developer Junk"
         case browserCache = "Browser Cache"
         
         var paths: [String] {
@@ -29,12 +29,29 @@ class JunkScanner: ObservableObject {
                 return ["\(home)/Downloads"]
             case .trash:
                 return ["\(home)/.Trash"]
-            case .xcodeJunk:
-                return [
+            case .developerJunk:
+                var result = [
                     "\(home)/Library/Developer/Xcode/DerivedData",
                     "\(home)/Library/Developer/Xcode/Archives",
-                    "\(home)/Library/Developer/CoreSimulator/Devices"
+                    "\(home)/Library/Developer/CoreSimulator/Devices",
+                    "\(home)/Library/Caches/CocoaPods",
+                    "\(home)/.cargo/registry",
+                    "\(home)/.cargo/git",
+                    "\(home)/Library/Caches/Yarn",
+                    "\(home)/.npm/_cacache"
                 ]
+                
+                // Add Android Studio cache directories dynamically if they exist
+                let fm = FileManager.default
+                let googleCache = "\(home)/Library/Caches/Google"
+                if let contents = try? fm.contentsOfDirectory(atPath: googleCache) {
+                    for item in contents {
+                        if item.hasPrefix("AndroidStudio") {
+                            result.append("\(googleCache)/\(item)")
+                        }
+                    }
+                }
+                return result
             case .browserCache:
                 return [
                     "\(home)/Library/Caches/com.apple.Safari",
@@ -50,7 +67,7 @@ class JunkScanner: ObservableObject {
             case .userLogs, .systemLogs: return "doc.text"
             case .downloads: return "arrow.down.circle"
             case .trash: return "trash"
-            case .xcodeJunk: return "hammer"
+            case .developerJunk: return "hammer"
             case .browserCache: return "globe"
             }
         }
@@ -80,7 +97,7 @@ class JunkScanner: ObservableObject {
         
         var safetyLevel: SafetyLevel {
             switch self {
-            case .browserCache, .xcodeJunk, .trash:
+            case .browserCache, .developerJunk, .trash:
                 return .safe
             case .userCache, .userLogs, .systemLogs:
                 return .caution
@@ -105,8 +122,8 @@ class JunkScanner: ObservableObject {
                 return "⛔️ Warning - Contains YOUR personal files!"
             case .trash:
                 return "✅ Safe - Already deleted files"
-            case .xcodeJunk:
-                return "✅ Safe - Build cache, regenerated when needed"
+            case .developerJunk:
+                return "✅ Safe - Build caches and package registries, regenerated when needed"
             case .browserCache:
                 return "✅ Safe - Browser will rebuild cache"
             }
@@ -236,11 +253,17 @@ class JunkScanner: ObservableObject {
         var cleanedSize: Int64 = 0
         var failedFiles: [(path: String, size: Int64)] = []
         let fileManager = FileManager.default
+        let safeDelete = UserDefaults.standard.bool(forKey: "safeDelete")
         
         for result in scanResults where result.isSelected {
             for file in result.files where file.isSelected {
                 do {
-                    try fileManager.removeItem(atPath: file.path)
+                    if safeDelete && result.category != .trash {
+                        let fileURL = URL(fileURLWithPath: file.path)
+                        try fileManager.trashItem(at: fileURL, resultingItemURL: nil)
+                    } else {
+                        try fileManager.removeItem(atPath: file.path)
+                    }
                     cleanedSize += file.size
                 } catch {
                     // File might need admin privileges

@@ -60,11 +60,17 @@ struct MenuBarView: View {
             // Quick Actions
             VStack(spacing: 4) {
                 MenuBarButton(title: "Quick Scan", icon: "magnifyingglass", color: .blue) {
-                    // TODO: Quick scan
+                    NSApp.activate(ignoringOtherApps: true)
+                    appState.selectedModule = .smartScan
+                    if let window = NSApp.windows.first(where: { $0.title == "CleanMac" || $0.isKeyWindow }) {
+                        window.makeKeyAndOrderFront(nil)
+                    } else if let window = NSApp.windows.first {
+                        window.makeKeyAndOrderFront(nil)
+                    }
                 }
                 
                 MenuBarButton(title: "Free Memory", icon: "memorychip", color: .purple) {
-                    // TODO: Free memory
+                    freeMemory()
                 }
                 
                 MenuBarButton(title: "Empty Trash", icon: "trash", color: .orange) {
@@ -81,6 +87,8 @@ struct MenuBarView: View {
                 Button("Open CleanMac") {
                     NSApp.activate(ignoringOtherApps: true)
                     if let window = NSApp.windows.first(where: { $0.title == "CleanMac" || $0.isKeyWindow }) {
+                        window.makeKeyAndOrderFront(nil)
+                    } else if let window = NSApp.windows.first {
                         window.makeKeyAndOrderFront(nil)
                     }
                 }
@@ -106,6 +114,29 @@ struct MenuBarView: View {
         return formatter.string(fromByteCount: bytes)
     }
     
+    func freeMemory() {
+        DispatchQueue.global(qos: .userInitiated).async {
+            let chunkSize = 100 * 1024 * 1024 // 100 MB
+            var arrays: [[UInt8]] = []
+            
+            // Allocate 8 chunks (800 MB total)
+            for _ in 0..<8 {
+                var chunk = [UInt8](repeating: 0, count: chunkSize)
+                for i in stride(from: 0, to: chunkSize, by: 4096) {
+                    chunk[i] = 1
+                }
+                arrays.append(chunk)
+                Thread.sleep(forTimeInterval: 0.05)
+            }
+            
+            arrays.removeAll()
+            
+            DispatchQueue.main.async {
+                appState.updateSystemInfo()
+            }
+        }
+    }
+    
     func emptyTrash() {
         let trashURL = FileManager.default.urls(for: .trashDirectory, in: .userDomainMask).first
         if let trashURL = trashURL {
@@ -113,6 +144,9 @@ struct MenuBarView: View {
                 let contents = try FileManager.default.contentsOfDirectory(at: trashURL, includingPropertiesForKeys: nil)
                 for item in contents {
                     try FileManager.default.removeItem(at: item)
+                }
+                DispatchQueue.main.async {
+                    appState.updateSystemInfo()
                 }
             } catch {
                 print("Error emptying trash: \(error)")

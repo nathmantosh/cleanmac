@@ -622,6 +622,7 @@ struct SmartScanView: View {
     @AppStorage("cleanSystemCache") private var cleanSystemCache = true
     @AppStorage("cleanUserCache") private var cleanUserCache = true
     @AppStorage("cleanLogs") private var cleanLogs = true
+    @AppStorage("cleanDeveloperJunk") private var cleanDeveloperJunk = true
     @AppStorage("cleanDownloads") private var cleanDownloads = false
     @AppStorage("cleanTrash") private var cleanTrash = false
 
@@ -629,10 +630,11 @@ struct SmartScanView: View {
         cleanSystemCache: Bool,
         cleanUserCache: Bool,
         cleanLogs: Bool,
+        cleanDeveloperJunk: Bool,
         cleanDownloads: Bool,
         cleanTrash: Bool
     ) -> [JunkScanner.JunkCategory] {
-        var categories: [JunkScanner.JunkCategory] = [.browserCache, .xcodeJunk]
+        var categories: [JunkScanner.JunkCategory] = [.browserCache]
 
         if cleanUserCache {
             categories.append(.userCache)
@@ -642,6 +644,9 @@ struct SmartScanView: View {
         }
         if cleanLogs {
             categories.append(contentsOf: [.userLogs, .systemLogs])
+        }
+        if cleanDeveloperJunk {
+            categories.append(.developerJunk)
         }
         if cleanDownloads {
             categories.append(.downloads)
@@ -658,6 +663,7 @@ struct SmartScanView: View {
             cleanSystemCache: cleanSystemCache,
             cleanUserCache: cleanUserCache,
             cleanLogs: cleanLogs,
+            cleanDeveloperJunk: cleanDeveloperJunk,
             cleanDownloads: cleanDownloads,
             cleanTrash: cleanTrash
         )
