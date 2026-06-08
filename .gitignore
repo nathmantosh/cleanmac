@@ -1,0 +1,20 @@
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Xcode build products
+build/
+DerivedData/
+*.moved-aside
+*.xcresult
+*.xcuserstate
+
+# Swift Package Manager
+.build/
+.swiftpm/
+.xcodebuild/
+packages/
+
+# Local configuration files
+.env
+*.local
